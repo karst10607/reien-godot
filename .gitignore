@@ -1,0 +1,20 @@
+# Godot 4 project ignores
+.godot/
+*.translation
+*.bak
+debug_*.png
+*.tmp
+
+# OS / Editor ignores
+.DS_Store
+Thumbs.db
+*.swp
+*.import.bak
+
+# Local portable Godot runner
+.tools/
+
+# Python / Web cache
+__pycache__/
+*.pyc
+.venv/

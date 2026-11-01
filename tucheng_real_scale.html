@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>新北市土城區 1:1 真實比例 GIS 數位孿生（長風新城・雙中庭花園露出版）</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #070d19; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+
+    /* Loading Overlay */
+    #loading-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #070d19; z-index: 100; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: #f8fafc;
+      transition: opacity 0.6s ease;
+    }
+    .spinner {
+      width: 48px; height: 48px; border: 4px solid rgba(56, 189, 248, 0.2);
+      border-top-color: #38bdf8; border-radius: 50%;
+      animation: spin 0.9s linear infinite; margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Glass UI */
+    .card-glass {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 18px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+      color: #f1f5f9;
+      pointer-events: auto;
+    }
+
+    /* Top HUD */
+    .top-bar {
+      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .brand-title {
+      font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 8px; color: #f8fafc;
+    }
+    .brand-sub { font-size: 12px; color: #94a3b8; margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+    .badge-scale {
+      font-size: 10px; padding: 2px 7px; border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);
+      font-weight: 600;
+    }
+    .badge-verified {
+      font-size: 10px; padding: 2px 7px; border-radius: 9999px;
+      background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);
+      font-weight: 600;
+    }
+
+    /* Controls Bar */
+    .controls-row {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto;
+    }
+    .btn-pill {
+      background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.16); color: #e2e8f0;
+      padding: 7px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      cursor: pointer; outline: none;
+      display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;
+    }
+    .btn-pill:hover { background: rgba(30, 41, 59, 0.95); border-color: #38bdf8; color: #ffffff; transform: translateY(-1px); }
+    .btn-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #60a5fa; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); }
+
+    .btn-light {
+      background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.45); color: #fef3c7;
+    }
+    .btn-light:hover { background: rgba(245, 158, 11, 0.35); border-color: #f59e0b; color: #ffffff; }
+    .btn-light.active { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); border-color: #fbbf24; color: #ffffff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); }
+
+    /* Bottom HUD & Scale Indicator */
+    .bottom-bar {
+      position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10;
+      display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none;
+    }
+    .scale-ruler-card {
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px; padding: 10px 14px; color: #f1f5f9; display: flex; flex-direction: column; gap: 6px;
+      pointer-events: auto;
+    }
+    .scale-bar-visual {
+      height: 4px; background: #38bdf8; border-radius: 2px; width: 140px;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6); position: relative;
+    }
+    .scale-bar-visual::before, .scale-bar-visual::after {
+      content: ''; position: absolute; top: -3px; width: 2px; height: 10px; background: #38bdf8;
+    }
+    .scale-bar-visual::before { left: 0; }
+    .scale-bar-visual::after { right: 0; }
+    .scale-bar-label { font-size: 11px; font-weight: 700; color: #7dd3fc; }
+    .coord-info { font-size: 10px; color: #94a3b8; }
+    
+    .nav-tips {
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px; padding: 10px 14px; font-size: 11px; color: #cbd5e1;
+      display: flex; gap: 12px; pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div style="font-size: 16px; font-weight: 600; letter-spacing: 0.5px;">載入土城 1:1 最新修改版 (tucheng_town.glb)...</div>
+    <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">包含長風新城雙中庭花園露出版 ‧ 369棟街廓建築 ‧ PBR即時光影</div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <!-- Top Controls HUD -->
+  <div class="top-bar">
+    <div class="card-glass">
+      <div class="brand-title">
+        <span>🗺️ 新北市土城區 1:1 GIS 數位孿生</span>
+        <span class="badge-scale">1:1 真實比例</span>
+        <span class="badge-verified">中庭遮擋徹底清除版</span>
+      </div>
+      <div class="brand-sub">
+        <span>長風新城（北側大中庭・南側露天花園） ‧ 369棟建築 ‧ 722條實測道路 ‧ 1,033m 城林長橋</span>
+      </div>
+    </div>
+
+    <!-- Landmark Presets -->
+    <div class="controls-row">
+      <span style="font-size:11px; color:#94a3b8; margin-right:4px;">📍 地標視角:</span>
+      <button class="btn-pill active" onclick="teleportView('north_courtyard')">🏘️ 長風北中庭 (大花園・原1052處)</button>
+      <button class="btn-pill" onclick="teleportView('south_courtyard')">🏡 長風南中庭 (露天花園・涼亭)</button>
+      <button class="btn-pill" onclick="teleportView('overview_estate')">🏙️ 長風新城雙中庭全貌</button>
+      <button class="btn-pill" onclick="teleportView('parks')">🌳 員林公園 & 金城公園</button>
+      <button class="btn-pill" onclick="teleportView('bridge')">🌉 城林大橋 (1,033m)</button>
+      <button class="btn-pill" onclick="teleportView('mrt')">🚇 捷運土城站</button>
+      <button class="btn-pill" onclick="teleportView('aerial')">🚁 1500m 全景鳥瞰</button>
+    </div>
+
+    <!-- Dynamic Time-of-Day Lighting Presets -->
+    <div class="controls-row">
+      <span style="font-size:11px; color:#fbbf24; margin-right:4px;">☀️ 動態採光與日照:</span>
+      <button class="btn-pill btn-light active" id="btn-light-noon" onclick="setLightingMode('noon')">☀️ 正午日光 (垂直立體陰影)</button>
+      <button class="btn-pill btn-light" id="btn-light-sunset" onclick="setLightingMode('sunset')">🌇 夕陽西下 (金色低角度長陰影)</button>
+      <button class="btn-pill btn-light" id="btn-light-dawn" onclick="setLightingMode('dawn')">🌅 清晨破曉 (柔和粉紫晨曦)</button>
+      <button class="btn-pill btn-light" id="btn-light-night" onclick="setLightingMode('night')">🌙 深邃夜色 (冷調都會月光)</button>
+      <button class="btn-pill btn-light" id="btn-sun-rotate" onclick="toggleSunRotation()" style="border: 1px solid rgba(251, 191, 36, 0.6); color: #fef08a; font-weight: 600;">🔄 太陽動態公轉 (開啟日照流動)</button>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="scale-ruler-card">
+      <div class="scale-bar-label" id="scale-val-label">100 公尺 (100m)</div>
+      <div class="scale-bar-visual" id="scale-ruler-bar"></div>
+      <div class="coord-info" id="gps-label">GPS: 24.9765° N, 121.4370° E | 範圍: 2.2km × 1.7km</div>
+    </div>
+    <div class="nav-tips">
+      <span>🖱️ 左鍵拖曳: 旋轉角度</span>
+      <span>🖱️ 滾輪: 縮放距離</span>
+      <span>🖱️ 右鍵拖曳: 平移視角</span>
+      <span>⌨️ WASD/QE: 飛行漫遊</span>
+    </div>
+  </div>
+
+  <script>
+    // 1. Scene, Camera & Renderer
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x38bdf8);
+    scene.fog = new THREE.FogExp2(0x38bdf8, 0.00035);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 2, 7000);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+    container.appendChild(renderer.domElement);
+
+    // 2. Environmental Lighting
+    const hemiLight = new THREE.HemisphereLight(0xfffbeb, 0x1e293b, 0.75);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfffaed, 1.7);
+    dirLight.position.set(40, 900, 350);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 4096;
+    dirLight.shadow.mapSize.height = 4096;
+    dirLight.shadow.camera.near = 10;
+    dirLight.shadow.camera.far = 3200;
+    dirLight.shadow.camera.left = -600;
+    dirLight.shadow.camera.right = 600;
+    dirLight.shadow.camera.top = 600;
+    dirLight.shadow.camera.bottom = -600;
+    dirLight.shadow.bias = -0.00015;
+    dirLight.shadow.normalBias = 0.02;
+    scene.add(dirLight);
+
+    // 3. Load Tucheng Town GLB Model (Latest modified version with cleared courtyards!)
+    const loader = new THREE.GLTFLoader();
+    let townModel = null;
+
+    loader.load('tucheng_town.glb', (gltf) => {
+      townModel = gltf.scene;
+      townModel.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.roughness = Math.min(0.92, Math.max(0.2, child.material.roughness || 0.7));
+            child.material.side = THREE.DoubleSide;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+      scene.add(townModel);
+
+      // Hide loading screen
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 600);
+      }
+      console.log('Tucheng Town GLB loaded successfully!');
+    }, undefined, (err) => {
+      console.error('Error loading GLB:', err);
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) overlay.innerHTML = '<div style="color:#ef4444; font-size:16px;">載入模型失敗，請確認伺服器正在運行</div>';
+    });
+
+    // 4. Dynamic Lighting Presets Logic
+    window.setLightingMode = function(mode) {
+      document.querySelectorAll('.btn-light').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-light-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (mode === 'noon') {
+        scene.background.setHex(0x38bdf8);
+        scene.fog.color.setHex(0x38bdf8);
+        hemiLight.intensity = 0.75;
+        hemiLight.color.setHex(0xfffbeb);
+        dirLight.intensity = 1.7;
+        dirLight.color.setHex(0xfffaed);
+        dirLight.position.set(40, 900, 350);
+      } else if (mode === 'sunset') {
+        scene.background.setHex(0x2a1538);
+        scene.fog.color.setHex(0x431407);
+        hemiLight.intensity = 0.55;
+        hemiLight.color.setHex(0xec4899);
+        dirLight.intensity = 2.4;
+        dirLight.color.setHex(0xf97316);
+        dirLight.position.set(-950, 150, 120);
+      } else if (mode === 'dawn') {
+        scene.background.setHex(0x1e1b4b);
+        scene.fog.color.setHex(0x312e81);
+        hemiLight.intensity = 0.60;
+        hemiLight.color.setHex(0xfda4af);
+        dirLight.intensity = 1.6;
+        dirLight.color.setHex(0xfecdd3);
+        dirLight.position.set(950, 150, -120);
+      } else if (mode === 'night') {
+        scene.background.setHex(0x020617);
+        scene.fog.color.setHex(0x020617);
+        hemiLight.intensity = 0.20;
+        dirLight.intensity = 0.35;
+        dirLight.color.setHex(0x60a5fa);
+        dirLight.position.set(300, 700, 300);
+      }
+    };
+
+    let isSunRotating = false;
+    let sunAngle = 0.8;
+    window.toggleSunRotation = function() {
+      isSunRotating = !isSunRotating;
+      const btn = document.getElementById('btn-sun-rotate');
+      if (isSunRotating) {
+        btn.classList.add('active');
+        btn.style.background = 'rgba(245, 158, 11, 0.35)';
+        btn.style.borderColor = '#fbbf24';
+        btn.innerText = '⏹️ 暫停太陽公轉';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.borderColor = 'rgba(251, 191, 36, 0.6)';
+        btn.innerText = '🔄 太陽動態公轉 (開啟日照流動)';
+      }
+    };
+
+    // 5. Camera Teleport & Navigation Coordinates
+    // Coordinates in Three.js (glTF coordinate system: X East, Y Up, Z South = -Y_blender):
+    // North Courtyard (原 Mesh_1052 處): X=374, Z=-151
+    // South Courtyard (原 Mesh_1042 處): X=372, Z=-68
+    const targetLookAt = new THREE.Vector3(374, 5, -151);
+    const cameraTargetPos = new THREE.Vector3(210, 65, -35);
+
+    window.teleportView = function(viewKey) {
+      document.querySelectorAll('.controls-row .btn-pill:not(.btn-light)').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
+
+      if (viewKey === 'north_courtyard') {
+        // Looking at the newly cleared northern garden (Mesh_1052 deleted)
+        targetLookAt.set(374, 6, -151);
+        cameraTargetPos.set(230, 60, -65);
+      } else if (viewKey === 'south_courtyard') {
+        // Looking at southern courtyard (Mesh_1042 deleted)
+        targetLookAt.set(372, 6, -68);
+        cameraTargetPos.set(372, 55, 30);
+      } else if (viewKey === 'overview_estate') {
+        // Looking at both courtyards
+        targetLookAt.set(373, 10, -110);
+        cameraTargetPos.set(160, 95, 20);
+      } else if (viewKey === 'parks') {
+        targetLookAt.set(490, 8, -172);
+        cameraTargetPos.set(540, 75, -75);
+      } else if (viewKey === 'mrt') {
+        targetLookAt.set(825, 6, 310);
+        cameraTargetPos.set(825, 120, 480);
+      } else if (viewKey === 'bridge') {
+        targetLookAt.set(-180, 14, 20);
+        cameraTargetPos.set(-780, 45, -420);
+      } else if (viewKey === 'aerial') {
+        targetLookAt.set(350, 0, -50);
+        cameraTargetPos.set(120, 950, 950);
+      }
+      
+      // Update directional light shadow target
+      dirLight.target.position.copy(targetLookAt);
+      dirLight.target.updateMatrixWorld();
+    };
+
+    // Mouse Navigation (Orbit & Pan)
+    let isDragging = false;
+    let dragButton = 0;
+    let prevMouseX = 0, prevMouseY = 0;
+
+    window.addEventListener('mousedown', e => {
+      isDragging = true;
+      dragButton = e.button;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouseX;
+      const dy = e.clientY - prevMouseY;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+
+      if (dragButton === 0) {
+        // Left Drag: Orbit around target
+        const offset = cameraTargetPos.clone().sub(targetLookAt);
+        const radius = offset.length();
+        let theta = Math.atan2(offset.x, offset.z);
+        let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)));
+
+        theta -= dx * 0.005;
+        phi = Math.max(0.10, Math.min(Math.PI / 2 - 0.04, phi - dy * 0.005));
+
+        cameraTargetPos.x = targetLookAt.x + radius * Math.sin(phi) * Math.sin(theta);
+        cameraTargetPos.y = targetLookAt.y + radius * Math.cos(phi);
+        cameraTargetPos.z = targetLookAt.z + radius * Math.sin(phi) * Math.cos(theta);
+      } else if (dragButton === 2) {
+        // Right Drag: Pan target and camera together
+        const forward = new THREE.Vector3().subVectors(targetLookAt, cameraTargetPos).normalize();
+        const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+        const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+
+        const panSpeed = 0.3;
+        const panOffset = right.clone().multiplyScalar(-dx * panSpeed).add(up.clone().multiplyScalar(dy * panSpeed));
+        cameraTargetPos.add(panOffset);
+        targetLookAt.add(panOffset);
+      }
+    });
+
+    window.addEventListener('wheel', e => {
+      const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
+      const offset = cameraTargetPos.clone().sub(targetLookAt);
+      const newRadius = Math.max(25, Math.min(3000, offset.length() * zoomFactor));
+      offset.setLength(newRadius);
+      cameraTargetPos.copy(targetLookAt).add(offset);
+    });
+
+    // Keyboard WASD + QE flight controls
+    const keysPressed = {};
+    window.addEventListener('keydown', e => { keysPressed[e.key.toLowerCase()] = true; });
+    window.addEventListener('keyup', e => { keysPressed[e.key.toLowerCase()] = false; });
+
+    function handleKeyboard(delta) {
+      const forward = new THREE.Vector3().subVectors(targetLookAt, camera.position).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const moveSpeed = (keysPressed['shift'] ? 180.0 : 60.0) * delta;
+
+      const move = new THREE.Vector3();
+      if (keysPressed['w']) move.add(forward.clone().multiplyScalar(moveSpeed));
+      if (keysPressed['s']) move.add(forward.clone().multiplyScalar(-moveSpeed));
+      if (keysPressed['a']) move.add(right.clone().multiplyScalar(-moveSpeed));
+      if (keysPressed['d']) move.add(right.clone().multiplyScalar(moveSpeed));
+      if (keysPressed['e']) move.y += moveSpeed;
+      if (keysPressed['q']) move.y -= moveSpeed;
+
+      if (move.lengthSq() > 0) {
+        cameraTargetPos.add(move);
+        targetLookAt.add(move);
+      }
+    }
+
+    function updateScaleHUD() {
+      const dist = camera.position.distanceTo(targetLookAt);
+      const rulerLabel = document.getElementById('scale-val-label');
+      const rulerBar = document.getElementById('scale-ruler-bar');
+      if (dist < 150) {
+        rulerLabel.innerText = '50 公尺 (50m)';
+        rulerBar.style.width = '120px';
+      } else if (dist < 400) {
+        rulerLabel.innerText = '100 公尺 (100m)';
+        rulerBar.style.width = '130px';
+      } else if (dist < 900) {
+        rulerLabel.innerText = '250 公尺 (250m)';
+        rulerBar.style.width = '140px';
+      } else {
+        rulerLabel.innerText = '500 公尺 (500m)';
+        rulerBar.style.width = '160px';
+      }
+    }
+
+    let currentLookAt = targetLookAt.clone();
+    let lastTime = performance.now();
+
+    function animate() {
+      const now = performance.now();
+      const delta = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+
+      handleKeyboard(delta);
+
+      if (isSunRotating) {
+        sunAngle += 0.007;
+        const radius = 950;
+        const sx = Math.cos(sunAngle) * radius + 380;
+        const sz = Math.sin(sunAngle) * radius - 100;
+        const hProgress = Math.sin(sunAngle);
+        const sy = Math.max(130, hProgress * 850 + 100);
+        dirLight.position.set(sx, sy, sz);
+
+        if (sy < 360) {
+          dirLight.color.setHex(0xf97316);
+          dirLight.intensity = 2.4;
+          hemiLight.intensity = 0.55;
+          hemiLight.color.setHex(0xec4899);
+          scene.background.setHex(0x2a1538);
+          scene.fog.color.setHex(0x431407);
+        } else {
+          dirLight.color.setHex(0xfffaed);
+          dirLight.intensity = 1.7;
+          hemiLight.intensity = 0.75;
+          hemiLight.color.setHex(0xfffbeb);
+          scene.background.setHex(0x38bdf8);
+          scene.fog.color.setHex(0x38bdf8);
+        }
+      }
+
+      requestAnimationFrame(animate);
+      camera.position.lerp(cameraTargetPos, 0.08);
+      currentLookAt.lerp(targetLookAt, 0.08);
+      camera.lookAt(currentLookAt);
+
+      updateScaleHUD();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
