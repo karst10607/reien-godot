@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>新北市土城區 1:1 真實比例 GIS 數位孿生（長風新城・雙中庭花園露出版）</title>
+  <title>新北市土城區 1:1 GIS 數位孿生（長風新城 ‧ 三重視角切換 ‧ 2.5D RO漫遊）</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <style>
@@ -27,12 +27,12 @@
 
     /* Glass UI */
     .card-glass {
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 14px;
-      padding: 12px 18px;
+      padding: 10px 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
       color: #f1f5f9;
       pointer-events: auto;
@@ -40,14 +40,14 @@
 
     /* Top HUD */
     .top-bar {
-      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
-      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+      position: absolute; top: 14px; left: 14px; right: 14px; z-index: 10;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
     }
     .brand-title {
-      font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
-      display: flex; align-items: center; gap: 8px; color: #f8fafc;
+      font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 8px; color: #f8fafc; flex-wrap: wrap;
     }
-    .brand-sub { font-size: 12px; color: #94a3b8; margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+    .brand-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
     .badge-scale {
       font-size: 10px; padding: 2px 7px; border-radius: 9999px;
       background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);
@@ -58,39 +58,52 @@
       background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);
       font-weight: 600;
     }
+    .badge-pages {
+      font-size: 10px; padding: 2px 7px; border-radius: 9999px;
+      background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);
+      font-weight: 600;
+    }
 
     /* Controls Bar */
     .controls-row {
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto;
+      display: flex; flex-wrap: wrap; gap: 7px; align-items: center; pointer-events: auto;
     }
     .btn-pill {
       background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.16); color: #e2e8f0;
-      padding: 7px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
       cursor: pointer; outline: none;
       display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;
     }
     .btn-pill:hover { background: rgba(30, 41, 59, 0.95); border-color: #38bdf8; color: #ffffff; transform: translateY(-1px); }
     .btn-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #60a5fa; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); }
 
-    .btn-light {
-      background: rgba(245, 158, 11, 0.18); border-color: rgba(245, 158, 11, 0.45); color: #fef3c7;
+    .btn-mode {
+      border-color: rgba(56, 189, 248, 0.35); color: #bae6fd;
     }
-    .btn-light:hover { background: rgba(245, 158, 11, 0.35); border-color: #f59e0b; color: #ffffff; }
+    .btn-mode.active {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border-color: #38bdf8; color: #ffffff; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
+    }
+
+    .btn-light {
+      background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.38); color: #fef3c7;
+    }
+    .btn-light:hover { background: rgba(245, 158, 11, 0.32); border-color: #f59e0b; color: #ffffff; }
     .btn-light.active { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); border-color: #fbbf24; color: #ffffff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); }
 
     /* Bottom HUD & Scale Indicator */
     .bottom-bar {
-      position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10;
+      position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 10;
       display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none;
     }
     .scale-ruler-card {
       background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px; padding: 10px 14px; color: #f1f5f9; display: flex; flex-direction: column; gap: 6px;
+      border-radius: 12px; padding: 9px 13px; color: #f1f5f9; display: flex; flex-direction: column; gap: 5px;
       pointer-events: auto;
     }
     .scale-bar-visual {
-      height: 4px; background: #38bdf8; border-radius: 2px; width: 140px;
+      height: 4px; background: #38bdf8; border-radius: 2px; width: 130px;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.6); position: relative;
     }
     .scale-bar-visual::before, .scale-bar-visual::after {
@@ -103,8 +116,18 @@
     
     .nav-tips {
       background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px; padding: 10px 14px; font-size: 11px; color: #cbd5e1;
-      display: flex; gap: 12px; pointer-events: auto;
+      border-radius: 12px; padding: 9px 13px; font-size: 11px; color: #cbd5e1;
+      display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap;
+    }
+
+    /* Mode Banner Toast */
+    #mode-toast {
+      position: absolute; top: 175px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 20px;
+      padding: 6px 16px; font-size: 12px; color: #7dd3fc; font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4); pointer-events: none;
+      transition: opacity 0.4s ease; opacity: 1; z-index: 20;
     }
   </style>
 </head>
@@ -117,6 +140,7 @@
   </div>
 
   <div id="canvas-container"></div>
+  <div id="mode-toast">🛰️ 當前為高空鳥瞰模式：滑鼠左鍵旋轉、滾輪縮放、右鍵平移</div>
 
   <!-- Top Controls HUD -->
   <div class="top-bar">
@@ -125,14 +149,23 @@
         <span>🗺️ 新北市土城區 1:1 GIS 數位孿生</span>
         <span class="badge-scale">1:1 真實比例</span>
         <span class="badge-verified">中庭遮擋徹底清除版</span>
+        <span class="badge-pages">GitHub Pages 公開版</span>
       </div>
       <div class="brand-sub">
         <span>長風新城（北側大中庭・南側露天花園） ‧ 369棟建築 ‧ 722條實測道路 ‧ 1,033m 城林長橋</span>
       </div>
     </div>
 
-    <!-- Landmark Presets -->
+    <!-- 視角模式切換 (Orbit / FPS / 2.5D RO) -->
     <div class="controls-row">
+      <span style="font-size:11px; color:#38bdf8; font-weight:700;">🎥 視角模式:</span>
+      <button class="btn-pill btn-mode active" id="btn-mode-orbit" onclick="setViewMode('orbit')">🛰️ 高空鳥瞰 (Orbit)</button>
+      <button class="btn-pill btn-mode" id="btn-mode-fps" onclick="setViewMode('fps')">🚶 第一人稱漫遊 (FPS)</button>
+      <button class="btn-pill btn-mode" id="btn-mode-ro" onclick="setViewMode('ro')">🕹️ 2.5D RO 人物走動 (Click-to-Move)</button>
+    </div>
+
+    <!-- Landmark Presets -->
+    <div class="controls-row" id="landmark-row">
       <span style="font-size:11px; color:#94a3b8; margin-right:4px;">📍 地標視角:</span>
       <button class="btn-pill active" onclick="teleportView('north_courtyard')">🏘️ 長風北中庭 (大花園・原1052處)</button>
       <button class="btn-pill" onclick="teleportView('south_courtyard')">🏡 長風南中庭 (露天花園・涼亭)</button>
@@ -146,11 +179,11 @@
     <!-- Dynamic Time-of-Day Lighting Presets -->
     <div class="controls-row">
       <span style="font-size:11px; color:#fbbf24; margin-right:4px;">☀️ 動態採光與日照:</span>
-      <button class="btn-pill btn-light active" id="btn-light-noon" onclick="setLightingMode('noon')">☀️ 正午日光 (垂直立體陰影)</button>
-      <button class="btn-pill btn-light" id="btn-light-sunset" onclick="setLightingMode('sunset')">🌇 夕陽西下 (金色低角度長陰影)</button>
-      <button class="btn-pill btn-light" id="btn-light-dawn" onclick="setLightingMode('dawn')">🌅 清晨破曉 (柔和粉紫晨曦)</button>
-      <button class="btn-pill btn-light" id="btn-light-night" onclick="setLightingMode('night')">🌙 深邃夜色 (冷調都會月光)</button>
-      <button class="btn-pill btn-light" id="btn-sun-rotate" onclick="toggleSunRotation()" style="border: 1px solid rgba(251, 191, 36, 0.6); color: #fef08a; font-weight: 600;">🔄 太陽動態公轉 (開啟日照流動)</button>
+      <button class="btn-pill btn-light active" id="btn-light-noon" onclick="setLightingMode('noon')">☀️ 正午日光</button>
+      <button class="btn-pill btn-light" id="btn-light-sunset" onclick="setLightingMode('sunset')">🌇 夕陽西下</button>
+      <button class="btn-pill btn-light" id="btn-light-dawn" onclick="setLightingMode('dawn')">🌅 清晨破曉</button>
+      <button class="btn-pill btn-light" id="btn-light-night" onclick="setLightingMode('night')">🌙 深邃夜色</button>
+      <button class="btn-pill btn-light" id="btn-sun-rotate" onclick="toggleSunRotation()" style="border: 1px solid rgba(251, 191, 36, 0.6); color: #fef08a; font-weight: 600;">🔄 太陽公轉</button>
     </div>
   </div>
 
@@ -160,7 +193,7 @@
       <div class="scale-bar-visual" id="scale-ruler-bar"></div>
       <div class="coord-info" id="gps-label">GPS: 24.9765° N, 121.4370° E | 範圍: 2.2km × 1.7km</div>
     </div>
-    <div class="nav-tips">
+    <div class="nav-tips" id="nav-tips-label">
       <span>🖱️ 左鍵拖曳: 旋轉角度</span>
       <span>🖱️ 滾輪: 縮放距離</span>
       <span>🖱️ 右鍵拖曳: 平移視角</span>
@@ -175,7 +208,7 @@
     scene.background = new THREE.Color(0x38bdf8);
     scene.fog = new THREE.FogExp2(0x38bdf8, 0.00035);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 2, 7000);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 7000);
     
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -205,7 +238,7 @@
     dirLight.shadow.normalBias = 0.02;
     scene.add(dirLight);
 
-    // 3. Load Tucheng Town GLB Model (Latest modified version with cleared courtyards!)
+    // 3. Load Tucheng Town GLB Model
     const loader = new THREE.GLTFLoader();
     let townModel = null;
 
@@ -237,7 +270,136 @@
       if (overlay) overlay.innerHTML = '<div style="color:#ef4444; font-size:16px;">載入模型失敗，請確認伺服器正在運行</div>';
     });
 
-    // 4. Dynamic Lighting Presets Logic
+    // 4. Create Cute 2.5D RO Adventurer Avatar & Target Marker
+    const characterGroup = new THREE.Group();
+    characterGroup.position.set(374, 0.25, -151); // Spawn at North Courtyard Plaza
+    scene.add(characterGroup);
+
+    // Avatar Body Parts
+    // A. Ground Shadow (classic RO round shadow)
+    const shadowGeo = new THREE.CircleGeometry(0.85, 20);
+    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.45, depthWrite: false });
+    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+    shadowMesh.rotation.x = -Math.PI / 2;
+    shadowMesh.position.y = 0.05;
+    characterGroup.add(shadowMesh);
+
+    // B. Legs (Left & Right)
+    const legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.75, 8);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+    const leftLeg = new THREE.Mesh(legGeo, legMat);
+    leftLeg.position.set(-0.25, 0.45, 0);
+    characterGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, legMat);
+    rightLeg.position.set(0.25, 0.45, 0);
+    characterGroup.add(rightLeg);
+
+    // C. Torso / Tunic (Blue & White Adventurer Outfit)
+    const torsoGeo = new THREE.CylinderGeometry(0.38, 0.44, 0.9, 10);
+    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.6 });
+    const torsoMesh = new THREE.Mesh(torsoGeo, torsoMat);
+    torsoMesh.position.y = 1.25;
+    torsoMesh.castShadow = true;
+    characterGroup.add(torsoMesh);
+
+    // D. Head & Anime Hair
+    const headGeo = new THREE.SphereGeometry(0.38, 16, 16);
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffedd5, roughness: 0.8 });
+    const headMesh = new THREE.Mesh(headGeo, skinMat);
+    headMesh.position.y = 1.95;
+    headMesh.castShadow = true;
+    characterGroup.add(headMesh);
+
+    // Cute Brown/Amber Hair
+    const hairGeo = new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.65);
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.7 });
+    const hairMesh = new THREE.Mesh(hairGeo, hairMat);
+    hairMesh.position.y = 2.0;
+    hairMesh.castShadow = true;
+    characterGroup.add(hairMesh);
+
+    // Red Feathery Adventurer Cap
+    const capGeo = new THREE.ConeGeometry(0.35, 0.45, 8);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.6 });
+    const capMesh = new THREE.Mesh(capGeo, capMat);
+    capMesh.position.set(0.18, 2.35, -0.05);
+    capMesh.rotation.z = -0.35;
+    characterGroup.add(capMesh);
+
+    // Target Ripple Ring (RO Style Click-to-Move Target Indicator)
+    const ringGeo = new THREE.RingGeometry(0.6, 0.95, 24);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+    const targetRing = new THREE.Mesh(ringGeo, ringMat);
+    targetRing.rotation.x = -Math.PI / 2;
+    targetRing.position.y = 0.28;
+    scene.add(targetRing);
+
+    let ringAnimTime = 0;
+    function triggerTargetRing(x, z) {
+      targetRing.position.set(x, 0.28, z);
+      targetRing.scale.set(0.5, 0.5, 0.5);
+      ringMat.opacity = 0.95;
+      ringAnimTime = 1.0;
+    }
+
+    // 5. View Modes State Machine (Orbit / FPS / 2.5D RO)
+    let currentViewMode = 'orbit'; // 'orbit' | 'fps' | 'ro'
+    
+    // Orbit camera parameters
+    const targetLookAt = new THREE.Vector3(374, 5, -151);
+    const cameraTargetPos = new THREE.Vector3(230, 60, -65);
+
+    // FPS camera parameters
+    const fpsPos = new THREE.Vector3(374, 1.8, -145);
+    let fpsYaw = 0.0;
+    let fpsPitch = 0.0;
+
+    // RO character navigation parameters
+    const characterTarget = new THREE.Vector3(374, 0.25, -151);
+    const walkSpeed = 16.0; // meters per second
+    let isWalking = false;
+    let walkAnimTime = 0;
+
+    window.setViewMode = function(mode) {
+      currentViewMode = mode;
+      document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-mode-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const toast = document.getElementById('mode-toast');
+      const tips = document.getElementById('nav-tips-label');
+
+      if (mode === 'orbit') {
+        characterGroup.visible = true;
+        toast.innerText = '🛰️ 高空鳥瞰模式：滑鼠左鍵旋轉、滾輪縮放、右鍵平移、可點擊地標快速跳轉';
+        tips.innerHTML = '<span>🖱️ 左鍵拖曳: 旋轉角度</span><span>🖱️ 滾輪: 縮放距離</span><span>🖱️ 右鍵拖曳: 平移視角</span><span>⌨️ WASD/QE: 飛行漫遊</span>';
+        targetLookAt.copy(characterGroup.position);
+        cameraTargetPos.set(characterGroup.position.x - 60, 45, characterGroup.position.z + 55);
+      } else if (mode === 'fps') {
+        characterGroup.visible = false;
+        toast.innerText = '🚶 第一人稱漫遊模式：滑鼠按住拖曳轉向 ‧ 鍵盤 WASD 前後左右行走 ‧ 視角貼地 1.8m';
+        tips.innerHTML = '<span>🖱️ 左鍵拖曳: 第一人稱環顧轉向</span><span>⌨️ WASD: 行走移動</span><span>⌨️ Shift: 加速跑</span><span>視線高: 1.8m</span>';
+        fpsPos.copy(characterGroup.position);
+        fpsPos.y = 1.8;
+      } else if (mode === 'ro') {
+        characterGroup.visible = true;
+        toast.innerText = '🕹️ 2.5D RO 人物冒險模式：滑鼠點擊地面行走 (Click-to-Move) ‧ 亦支援 WASD ‧ 經典 50° 俯視角跟隨';
+        tips.innerHTML = '<span>🖱️ 點擊地面: 角色走到目標點</span><span>⌨️ WASD: 直接控制角色走動</span><span>經典 RO 50° 視角自動跟隨</span>';
+        characterTarget.copy(characterGroup.position);
+      }
+
+      toast.style.opacity = '1';
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 4500);
+    };
+
+    // Ground Plane for Raycasting Click-to-Move
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const raycaster = new THREE.Raycaster();
+    const mouseNDC = new THREE.Vector2();
+
+    // 6. Dynamic Lighting Presets Logic
     window.setLightingMode = function(mode) {
       document.querySelectorAll('.btn-light').forEach(b => b.classList.remove('active'));
       const activeBtn = document.getElementById('btn-light-' + mode);
@@ -291,31 +453,25 @@
         btn.classList.remove('active');
         btn.style.background = '';
         btn.style.borderColor = 'rgba(251, 191, 36, 0.6)';
-        btn.innerText = '🔄 太陽動態公轉 (開啟日照流動)';
+        btn.innerText = '🔄 太陽公轉';
       }
     };
 
-    // 5. Camera Teleport & Navigation Coordinates
-    // Coordinates in Three.js (glTF coordinate system: X East, Y Up, Z South = -Y_blender):
-    // North Courtyard (原 Mesh_1052 處): X=374, Z=-151
-    // South Courtyard (原 Mesh_1042 處): X=372, Z=-68
-    const targetLookAt = new THREE.Vector3(374, 5, -151);
-    const cameraTargetPos = new THREE.Vector3(210, 65, -35);
-
+    // 7. Teleport Landmarks
     window.teleportView = function(viewKey) {
-      document.querySelectorAll('.controls-row .btn-pill:not(.btn-light)').forEach(b => b.classList.remove('active'));
+      if (currentViewMode !== 'orbit') setViewMode('orbit');
+      document.querySelectorAll('#landmark-row .btn-pill').forEach(b => b.classList.remove('active'));
       if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
 
       if (viewKey === 'north_courtyard') {
-        // Looking at the newly cleared northern garden (Mesh_1052 deleted)
         targetLookAt.set(374, 6, -151);
         cameraTargetPos.set(230, 60, -65);
+        characterGroup.position.set(374, 0.25, -151);
       } else if (viewKey === 'south_courtyard') {
-        // Looking at southern courtyard (Mesh_1042 deleted)
         targetLookAt.set(372, 6, -68);
         cameraTargetPos.set(372, 55, 30);
+        characterGroup.position.set(372, 0.25, -68);
       } else if (viewKey === 'overview_estate') {
-        // Looking at both courtyards
         targetLookAt.set(373, 10, -110);
         cameraTargetPos.set(160, 95, 20);
       } else if (viewKey === 'parks') {
@@ -331,24 +487,46 @@
         targetLookAt.set(350, 0, -50);
         cameraTargetPos.set(120, 950, 950);
       }
-      
-      // Update directional light shadow target
       dirLight.target.position.copy(targetLookAt);
       dirLight.target.updateMatrixWorld();
     };
 
-    // Mouse Navigation (Orbit & Pan)
+    // 8. Mouse & Click-to-Move Handler
     let isDragging = false;
     let dragButton = 0;
     let prevMouseX = 0, prevMouseY = 0;
+    let mouseDownTime = 0;
 
     window.addEventListener('mousedown', e => {
       isDragging = true;
       dragButton = e.button;
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
+      mouseDownTime = performance.now();
     });
-    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    window.addEventListener('mouseup', e => {
+      isDragging = false;
+      const duration = performance.now() - mouseDownTime;
+      const moved = Math.hypot(e.clientX - prevMouseX, e.clientY - prevMouseY);
+
+      // If clicked without dragging, trigger 2.5D RO Click-to-Move
+      if (duration < 250 && moved < 8 && e.button === 0) {
+        mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouseNDC, camera);
+
+        const hitPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(groundPlane, hitPoint)) {
+          if (currentViewMode === 'ro') {
+            characterTarget.copy(hitPoint);
+            triggerTargetRing(hitPoint.x, hitPoint.z);
+            isWalking = true;
+          }
+        }
+      }
+    });
+
     window.addEventListener('contextmenu', e => e.preventDefault());
 
     window.addEventListener('mousemove', e => {
@@ -358,61 +536,151 @@
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
-      if (dragButton === 0) {
-        // Left Drag: Orbit around target
-        const offset = cameraTargetPos.clone().sub(targetLookAt);
-        const radius = offset.length();
-        let theta = Math.atan2(offset.x, offset.z);
-        let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)));
+      if (currentViewMode === 'orbit') {
+        if (dragButton === 0) {
+          // Orbit Rotation
+          const offset = cameraTargetPos.clone().sub(targetLookAt);
+          const radius = offset.length();
+          let theta = Math.atan2(offset.x, offset.z);
+          let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)));
 
-        theta -= dx * 0.005;
-        phi = Math.max(0.10, Math.min(Math.PI / 2 - 0.04, phi - dy * 0.005));
+          theta -= dx * 0.005;
+          phi = Math.max(0.08, Math.min(Math.PI / 2 - 0.04, phi - dy * 0.005));
 
-        cameraTargetPos.x = targetLookAt.x + radius * Math.sin(phi) * Math.sin(theta);
-        cameraTargetPos.y = targetLookAt.y + radius * Math.cos(phi);
-        cameraTargetPos.z = targetLookAt.z + radius * Math.sin(phi) * Math.cos(theta);
-      } else if (dragButton === 2) {
-        // Right Drag: Pan target and camera together
-        const forward = new THREE.Vector3().subVectors(targetLookAt, cameraTargetPos).normalize();
-        const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
-        const up = new THREE.Vector3().crossVectors(right, forward).normalize();
-
-        const panSpeed = 0.3;
-        const panOffset = right.clone().multiplyScalar(-dx * panSpeed).add(up.clone().multiplyScalar(dy * panSpeed));
-        cameraTargetPos.add(panOffset);
-        targetLookAt.add(panOffset);
+          cameraTargetPos.x = targetLookAt.x + radius * Math.sin(phi) * Math.sin(theta);
+          cameraTargetPos.y = targetLookAt.y + radius * Math.cos(phi);
+          cameraTargetPos.z = targetLookAt.z + radius * Math.sin(phi) * Math.cos(theta);
+        } else if (dragButton === 2) {
+          // Pan
+          const forward = new THREE.Vector3().subVectors(targetLookAt, cameraTargetPos).normalize();
+          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+          const panSpeed = 0.3;
+          const panOffset = right.clone().multiplyScalar(-dx * panSpeed).add(up.clone().multiplyScalar(dy * panSpeed));
+          cameraTargetPos.add(panOffset);
+          targetLookAt.add(panOffset);
+        }
+      } else if (currentViewMode === 'fps') {
+        // FPS Look
+        fpsYaw -= dx * 0.0035;
+        fpsPitch = Math.max(-1.2, Math.min(1.2, fpsPitch - dy * 0.0035));
+      } else if (currentViewMode === 'ro') {
+        if (dragButton === 2) {
+          // RO Mode optional subtle camera angle adjustment
+          cameraTargetPos.x += dx * 0.2;
+          cameraTargetPos.z += dy * 0.2;
+        }
       }
     });
 
     window.addEventListener('wheel', e => {
-      const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
-      const offset = cameraTargetPos.clone().sub(targetLookAt);
-      const newRadius = Math.max(25, Math.min(3000, offset.length() * zoomFactor));
-      offset.setLength(newRadius);
-      cameraTargetPos.copy(targetLookAt).add(offset);
+      if (currentViewMode === 'orbit') {
+        const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
+        const offset = cameraTargetPos.clone().sub(targetLookAt);
+        const newRadius = Math.max(20, Math.min(3000, offset.length() * zoomFactor));
+        offset.setLength(newRadius);
+        cameraTargetPos.copy(targetLookAt).add(offset);
+      }
     });
 
-    // Keyboard WASD + QE flight controls
+    // 9. Keyboard WASD Controls for FPS and RO
     const keysPressed = {};
     window.addEventListener('keydown', e => { keysPressed[e.key.toLowerCase()] = true; });
     window.addEventListener('keyup', e => { keysPressed[e.key.toLowerCase()] = false; });
 
     function handleKeyboard(delta) {
-      const forward = new THREE.Vector3().subVectors(targetLookAt, camera.position).normalize();
-      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
-      const moveSpeed = (keysPressed['shift'] ? 180.0 : 60.0) * delta;
+      const isShift = keysPressed['shift'];
 
-      const move = new THREE.Vector3();
-      if (keysPressed['w']) move.add(forward.clone().multiplyScalar(moveSpeed));
-      if (keysPressed['s']) move.add(forward.clone().multiplyScalar(-moveSpeed));
-      if (keysPressed['a']) move.add(right.clone().multiplyScalar(-moveSpeed));
-      if (keysPressed['d']) move.add(right.clone().multiplyScalar(moveSpeed));
-      if (keysPressed['e']) move.y += moveSpeed;
-      if (keysPressed['q']) move.y -= moveSpeed;
+      if (currentViewMode === 'orbit') {
+        const forward = new THREE.Vector3().subVectors(targetLookAt, camera.position).normalize();
+        const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+        const moveSpeed = (isShift ? 180.0 : 60.0) * delta;
+        const move = new THREE.Vector3();
+        if (keysPressed['w']) move.add(forward.clone().multiplyScalar(moveSpeed));
+        if (keysPressed['s']) move.add(forward.clone().multiplyScalar(-moveSpeed));
+        if (keysPressed['a']) move.add(right.clone().multiplyScalar(-moveSpeed));
+        if (keysPressed['d']) move.add(right.clone().multiplyScalar(moveSpeed));
+        if (keysPressed['e']) move.y += moveSpeed;
+        if (keysPressed['q']) move.y -= moveSpeed;
+        if (move.lengthSq() > 0) {
+          cameraTargetPos.add(move);
+          targetLookAt.add(move);
+        }
+      } else if (currentViewMode === 'fps') {
+        const moveSpeed = (isShift ? 24.0 : 10.0) * delta;
+        const sinY = Math.sin(fpsYaw);
+        const cosY = Math.cos(fpsYaw);
+        const forward = new THREE.Vector3(-sinY, 0, -cosY);
+        const right = new THREE.Vector3(cosY, 0, -sinY);
 
-      if (move.lengthSq() > 0) {
-        cameraTargetPos.add(move);
-        targetLookAt.add(move);
+        if (keysPressed['w']) fpsPos.add(forward.clone().multiplyScalar(moveSpeed));
+        if (keysPressed['s']) fpsPos.add(forward.clone().multiplyScalar(-moveSpeed));
+        if (keysPressed['a']) fpsPos.add(right.clone().multiplyScalar(-moveSpeed));
+        if (keysPressed['d']) fpsPos.add(right.clone().multiplyScalar(moveSpeed));
+
+        // Ground clamping: eye height is always 1.8m
+        fpsPos.y = 1.8;
+      } else if (currentViewMode === 'ro') {
+        // RO Mode direct keyboard walking
+        const moveSpeed = (isShift ? 22.0 : 14.0) * delta;
+        const move = new THREE.Vector3();
+        if (keysPressed['w']) move.z -= moveSpeed;
+        if (keysPressed['s']) move.z += moveSpeed;
+        if (keysPressed['a']) move.x -= moveSpeed;
+        if (keysPressed['d']) move.x += moveSpeed;
+
+        if (move.lengthSq() > 0) {
+          characterGroup.position.add(move);
+          characterTarget.copy(characterGroup.position);
+          const angle = Math.atan2(move.x, move.z);
+          characterGroup.rotation.y = angle;
+          isWalking = true;
+        }
+      }
+    }
+
+    // 10. Update Character Walking Animation & Leg Swing
+    function updateCharacter(delta) {
+      if (currentViewMode === 'ro') {
+        const dist = characterGroup.position.distanceTo(characterTarget);
+        if (dist > 0.4) {
+          isWalking = true;
+          const dir = new THREE.Vector3().subVectors(characterTarget, characterGroup.position);
+          dir.y = 0;
+          dir.normalize();
+
+          // Smooth turn
+          const targetAngle = Math.atan2(dir.x, dir.z);
+          characterGroup.rotation.y = THREE.MathUtils.lerp(characterGroup.rotation.y, targetAngle, 0.25);
+
+          // Move
+          const step = Math.min(dist, walkSpeed * delta);
+          characterGroup.position.add(dir.multiplyScalar(step));
+        } else {
+          isWalking = false;
+        }
+      }
+
+      // Animate Legs and Bobbing
+      if (isWalking) {
+        walkAnimTime += delta * 12.0;
+        leftLeg.rotation.x = Math.sin(walkAnimTime) * 0.65;
+        rightLeg.rotation.x = -Math.sin(walkAnimTime) * 0.65;
+        torsoMesh.position.y = 1.25 + Math.abs(Math.sin(walkAnimTime * 2)) * 0.08;
+        headMesh.position.y = 1.95 + Math.abs(Math.sin(walkAnimTime * 2)) * 0.08;
+      } else {
+        leftLeg.rotation.x *= 0.8;
+        rightLeg.rotation.x *= 0.8;
+        walkAnimTime += delta * 2.0; // Idle breathing
+        torsoMesh.position.y = 1.25 + Math.sin(walkAnimTime) * 0.02;
+        headMesh.position.y = 1.95 + Math.sin(walkAnimTime) * 0.02;
+      }
+
+      // Target Ring Fade Animation
+      if (ringAnimTime > 0) {
+        ringAnimTime -= delta * 1.5;
+        targetRing.scale.addScalar(delta * 0.8);
+        ringMat.opacity = Math.max(0, ringAnimTime);
       }
     }
 
@@ -435,6 +703,7 @@
       }
     }
 
+    // 11. Main Render Loop
     let currentLookAt = targetLookAt.clone();
     let lastTime = performance.now();
 
@@ -444,6 +713,7 @@
       lastTime = now;
 
       handleKeyboard(delta);
+      updateCharacter(delta);
 
       if (isSunRotating) {
         sunAngle += 0.007;
@@ -471,13 +741,30 @@
         }
       }
 
-      requestAnimationFrame(animate);
-      camera.position.lerp(cameraTargetPos, 0.08);
-      currentLookAt.lerp(targetLookAt, 0.08);
-      camera.lookAt(currentLookAt);
+      // Camera State Update
+      if (currentViewMode === 'orbit') {
+        camera.position.lerp(cameraTargetPos, 0.08);
+        currentLookAt.lerp(targetLookAt, 0.08);
+        camera.lookAt(currentLookAt);
+      } else if (currentViewMode === 'fps') {
+        camera.position.lerp(fpsPos, 0.15);
+        const targetX = fpsPos.x - Math.sin(fpsYaw) * Math.cos(fpsPitch) * 20.0;
+        const targetY = fpsPos.y + Math.sin(fpsPitch) * 20.0;
+        const targetZ = fpsPos.z - Math.cos(fpsYaw) * Math.cos(fpsPitch) * 20.0;
+        camera.lookAt(targetX, targetY, targetZ);
+      } else if (currentViewMode === 'ro') {
+        // RO 2.5D Classic Camera: 50 degree angle follow
+        const roCamOffset = new THREE.Vector3(0, 16.5, 18.5);
+        const roTargetCam = characterGroup.position.clone().add(roCamOffset);
+        camera.position.lerp(roTargetCam, 0.09);
+        const roLookTarget = characterGroup.position.clone().add(new THREE.Vector3(0, 1.2, 0));
+        currentLookAt.lerp(roLookTarget, 0.12);
+        camera.lookAt(currentLookAt);
+      }
 
       updateScaleHUD();
       renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     }
     animate();
 
